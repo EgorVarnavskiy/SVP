@@ -7,6 +7,7 @@ GameBoard::GameBoard(QWidget *parent)
     : QWidget(parent), gameLogic(nullptr)
 {
     setMinimumSize(240, 240);
+    setStyleSheet("background-color: #1e1e1e;");
 }
 
 void GameBoard::setGameLogic(GameLogic *logic)
@@ -54,8 +55,11 @@ void GameBoard::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // Фон
-    painter.fillRect(rect(), Qt::white);
+    // Фон с градиентом
+    QLinearGradient gradient(0, 0, width(), height());
+    gradient.setColorAt(0, QColor("#2a2a2a"));
+    gradient.setColorAt(1, QColor("#1a1a1a"));
+    painter.fillRect(rect(), gradient);
 
     drawGrid(painter);
     drawSymbols(painter);
@@ -66,7 +70,7 @@ void GameBoard::drawGrid(QPainter &painter)
     int size = gameLogic->boardSize();
     int cellSizeValue = cellSize();
 
-    painter.setPen(QPen(Qt::black, 2));
+    painter.setPen(QPen(QColor("#4a4a4a"), 3));
 
     for (int i = 1; i < size; ++i) {
         int x = i * cellSizeValue;
@@ -90,12 +94,28 @@ void GameBoard::drawSymbols(QPainter &painter)
             QRect rect = cellRect(row, col);
 
             if (cell == GameLogic::CellX) {
-                painter.setPen(QPen(Qt::red, 4));
-                painter.drawLine(rect.topLeft(), rect.bottomRight());
-                painter.drawLine(rect.topRight(), rect.bottomLeft());
+                // X с градиентом
+                QLinearGradient xGradient(rect.topLeft(), rect.bottomRight());
+                xGradient.setColorAt(0, QColor("#ff6b6b"));
+                xGradient.setColorAt(1, QColor("#ff4757"));
+                painter.setPen(QPen(xGradient, 5));
+                painter.setBrush(Qt::NoBrush);
+
+                int padding = cellSizeValue / 8;
+                painter.drawLine(rect.topLeft() + QPoint(padding, padding),
+                               rect.bottomRight() - QPoint(padding, padding));
+                painter.drawLine(rect.topRight() + QPoint(-padding, padding),
+                               rect.bottomLeft() + QPoint(padding, -padding));
             } else if (cell == GameLogic::CellO) {
-                painter.setPen(QPen(Qt::blue, 4));
-                painter.drawEllipse(rect.adjusted(5, 5, -5, -5));
+                // O с градиентом
+                QLinearGradient oGradient(rect.topLeft(), rect.bottomRight());
+                oGradient.setColorAt(0, QColor("#4a9cff"));
+                oGradient.setColorAt(1, QColor("#3742fa"));
+                painter.setPen(QPen(oGradient, 5));
+                painter.setBrush(Qt::NoBrush);
+
+                int padding = cellSizeValue / 8;
+                painter.drawEllipse(rect.adjusted(padding, padding, -padding, -padding));
             }
         }
     }
@@ -114,6 +134,7 @@ QPoint GameBoard::cellAtPosition(const QPoint &pos) const
     int col = pos.x() / cellSizeValue;
     return QPoint(row, col);
 }
+
 void GameBoard::mousePressEvent(QMouseEvent *event)
 {
     if (!gameLogic || gameLogic->gameState() != GameLogic::StatePlaying) {

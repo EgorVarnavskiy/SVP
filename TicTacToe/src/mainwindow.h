@@ -39,4 +39,4 @@ private:
     int scoreDraw;
 };
 
-#endif // MAINWINDOW_H
+#endif
